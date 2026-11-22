@@ -68,7 +68,7 @@
     const ps=Math.round(t.profit*S.share)/100;
     $('s-pshare-k').textContent=(current?'نصيب الشريك':'نصيب الشركاء')+' ('+S.share+'٪)';$('s-pshare').textContent=fmt(ps);
     $('s-oshare-k').textContent='نصيب التشغيل ('+(100-S.share)+'٪)';$('s-oshare').textContent=fmt(t.profit-ps);
-    $('s-oshare').parentElement.hidden=!ADMIN;if(!ADMIN)$('s-pshare-k').textContent='نصيبك من الربح';
+    $('s-oshare').parentElement.hidden=!ADMIN;$('s-profit').parentElement.hidden=!ADMIN;if(!ADMIN)$('s-pshare-k').textContent='نصيبك من الربح';
     $('s-due').textContent=fmt(t.due);$('s-profit').textContent=fmt(t.profit);$('s-paid').textContent=fmt(t.paid);
     $('s-left').style.color=t.left<0?'var(--bad)':'';
     $('hb').innerHTML='';$('hb').append(fmt(t.left));const c=document.createElement('span');c.className='cur';c.textContent='ريال';$('hb').append(c);
@@ -152,7 +152,7 @@
     setVal($('cap-input'),p.capital);$('cap-input').disabled=!ADMIN;
     $('add-client').hidden=!ADMIN;
     $('rate-chip2').textContent=ADMIN?'نسبة الربح '+S.rate+'٪':'';
-    $('clients-note').hidden=!ADMIN;
+    $('clients-note').hidden=!ADMIN;$('th-cprofit').textContent=ADMIN?'الربح':'ربحك';
     const tb=$('clients');
     const slots=ADMIN?Array.from({length:slotCount(pid)},(_,i)=>i+1):clientsOf(pid).filter(c=>c.name||c.taken||c.due).map(c=>c.slot);
     const want=new Set(slots);
@@ -191,14 +191,15 @@
     });
     showTiles(stats(pid));
     let taken=0,due=0,paid=0;for(const c of clientsOf(pid)){taken+=+c.taken||0;due+=+c.due||0;if(c.paid)paid+=+c.due||0}
-    $('c-taken').textContent=fmt(taken);$('c-due').textContent=fmt(due);$('c-profit').textContent=fmt(due-taken);$('c-paid').textContent=fmt(paid);
+    $('c-taken').textContent=fmt(taken);$('c-due').textContent=fmt(due);$('c-profit').textContent=fmt(ADMIN?due-taken:Math.round((due-taken)*S.share)/100);$('c-paid').textContent=fmt(paid);
   }
   function updateRow(slot){
     const r=cRows.get(slot);if(!r) return;const d=clientAt(current,slot)||{};
     const has=d.taken!=null&&d.due!=null;const p=(+d.due||0)-(+d.taken||0);
     setVal(r.due,d.due);
-    r.profit.textContent=has?fmt(p):'';r.profit.classList.toggle('pos',has&&p>0);r.profit.classList.toggle('neg',has&&p<0);
-    const link=waLink(d.phone);
+    const pv=ADMIN?p:Math.round(p*S.share)/100;
+    r.profit.textContent=has?fmt(pv):'';r.profit.classList.toggle('pos',has&&p>0);r.profit.classList.toggle('neg',has&&p<0);
+    const link=ADMIN?waLink(d.phone):'';r.wa.hidden=!ADMIN;
     if(link){r.wa.href=link;r.wa.removeAttribute('aria-disabled')}else{r.wa.removeAttribute('href');r.wa.setAttribute('aria-disabled','true')}
     r.tr.classList.toggle('is-paid',!!d.paid);
   }
@@ -321,7 +322,7 @@
       }
     }else{
       const rows=clientsOf(current).filter(c=>+c.due).sort((a,b)=>(!!a.paid)-(!!b.paid)||a.slot-b.slot);
-      for(const c of rows){cnt++;due+=+c.due;if(c.paid){done++;paid+=+c.due}items.push({name:c.name||'عميل',side:fmt(c.due),paid:!!c.paid,wa:c.paid?'':waLink(c.phone)})}
+      for(const c of rows){cnt++;due+=+c.due;if(c.paid){done++;paid+=+c.due}items.push({name:c.name||'عميل',side:fmt(c.due),paid:!!c.paid,wa:c.paid||!ADMIN?'':waLink(c.phone)})}
     }
     $('pay-bar').style.width=(due?Math.round(paid/due*100):0)+'%';
     $('pay-txt').textContent='سدّد '+done+' من '+cnt;$('pay-left').textContent='المتبقي '+fmt(due-paid)+' ريال';

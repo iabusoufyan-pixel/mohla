@@ -20,7 +20,7 @@
 <link rel="apple-touch-icon" href="{{ url_for('static', filename='logo.svg') }}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@600;700&display=swap">
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=5">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=6">
 </head>
 <body data-role="{{ role }}">
 <div class="band gut"><div class="band-in">
@@ -109,7 +109,7 @@
     </div>
     <div class="scroll">
       <table style="min-width:1020px">
-        <thead><tr><th>#</th><th>الاسم</th><th>الهوية</th><th>صورة السند</th><th>المأخوذ</th><th>المطلوب</th><th>الربح</th><th>الجوال</th><th>مسدَّد</th></tr></thead>
+        <thead><tr><th>#</th><th>الاسم</th><th>الهوية</th><th>صورة السند</th><th>المأخوذ</th><th>المطلوب</th><th id="th-cprofit">الربح</th><th>الجوال</th><th>مسدَّد</th></tr></thead>
         <tbody id="clients"></tbody>
         <tfoot><tr><td></td><td>المجموع</td><td></td><td></td><td class="num" id="c-taken">0</td><td class="num" id="c-due">0</td><td class="num" id="c-profit">0</td><td></td><td class="num" id="c-paid">0</td></tr></tfoot>
       </table>
@@ -215,6 +215,6 @@
 </div>
 
 <input type="file" id="file" accept="image/*,application/pdf" hidden>
-<script src="{{ url_for('static', filename='app.js') }}?v=5"></script>
+<script src="{{ url_for('static', filename='app.js') }}?v=6"></script>
 </body>
 </html>

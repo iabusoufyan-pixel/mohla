@@ -191,10 +191,21 @@ def text(v, n):
     return ("" if v is None else str(v)).strip()[:n]
 
 
-def client_json(c):
-    return {"slot": c.slot, "name": c.name or "", "nid": c.nid or "", "taken": c.taken, "due": c.due,
-            "rate": c.rate, "phone": c.phone or "", "paid": bool(c.paid), "bond": c.id if c.bond_type else None,
-            "bondType": c.bond_type or ""}
+def mask(v, head, tail):
+    v = (v or "").strip()
+    if len(v) <= head + tail:
+        return "•" * len(v)
+    return v[:head] + "•" * (len(v) - head - tail) + v[-tail:]
+
+
+def client_json(c, partner_view=False):
+    d = {"slot": c.slot, "name": c.name or "", "nid": c.nid or "", "taken": c.taken, "due": c.due,
+         "rate": c.rate, "phone": c.phone or "", "paid": bool(c.paid), "bond": c.id if c.bond_type else None,
+         "bondType": c.bond_type or ""}
+    if partner_view:  # الشريك لا يرى الجوال ولا الهوية كاملة
+        d["phone"] = mask(c.phone, 3, 2)
+        d["nid"] = mask(c.nid, 0, 4)
+    return d
 
 
 # ---------------------------------------------------------------- routes
@@ -244,7 +255,7 @@ def register(app):
         clients = {}
         if ids:
             for c in Client.query.filter(Client.partner_id.in_(ids)).order_by(Client.slot):
-                clients.setdefault(str(c.partner_id), []).append(client_json(c))
+                clients.setdefault(str(c.partner_id), []).append(client_json(c, u.role != "admin"))
         return jsonify(
             role=u.role, username=u.username, rate=get_rate(), share=get_share(),
             partners=[{"id": p.id, "name": p.name or "", "capital": p.capital, "order": p.order,

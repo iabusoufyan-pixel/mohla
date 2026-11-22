@@ -8,7 +8,7 @@
   const setStatus=(t,err)=>{const s=$('status');s.textContent=t;s.classList.toggle('err',!!err)};
   const MIN_CLIENTS=20, PRESETS=[10,20,30];
 
-  let S={rate:14,partners:[],clients:{}};   // server state
+  let S={rate:14,share:50,partners:[],clients:{}};   // server state
   let current=null, tab=null, extra=0, loaded=false, scopeRoute=undefined;
 
   /* ---------- api ---------- */
@@ -25,7 +25,7 @@
   async function load(){
     try{
       const j=await api('GET','/api/state');
-      S={rate:j.rate,partners:j.partners,clients:j.clients||{}};sortPartners();
+      S={rate:j.rate,share:j.share??50,partners:j.partners,clients:j.clients||{}};sortPartners();
       if(!loaded){loaded=true;setStatus('البيانات محدّثة')}
       route();
     }catch(e){if(e.message!=='login')setStatus('تعذّر تحميل البيانات، تأكد من الاتصال',true)}
@@ -65,6 +65,9 @@
   const td=x=>{const c=document.createElement('td');if(x)c.append(x);return c};
   function showTiles(t){
     $('s-cap').textContent=fmt(t.cap);$('s-spent').textContent=fmt(t.spent);$('s-left').textContent=fmt(t.left);
+    const ps=Math.round(t.profit*S.share)/100;
+    $('s-pshare-k').textContent=(current?'نصيب الشريك':'نصيب الشركاء')+' ('+S.share+'٪)';$('s-pshare').textContent=fmt(ps);
+    $('s-oshare-k').textContent='نصيب التشغيل ('+(100-S.share)+'٪)';$('s-oshare').textContent=fmt(t.profit-ps);
     $('s-due').textContent=fmt(t.due);$('s-profit').textContent=fmt(t.profit);$('s-paid').textContent=fmt(t.paid);
     $('s-left').style.color=t.left<0?'var(--bad)':'';
     $('hb').innerHTML='';$('hb').append(fmt(t.left));const c=document.createElement('span');c.className='cur';c.textContent='ريال';$('hb').append(c);
@@ -100,13 +103,13 @@
       armed(del,'✕','تأكيد حذف الشريك وعملائه',()=>run('p'+p.id,()=>api('DELETE','/api/partner/'+p.id)).then(load));
       const act=td();const ai=document.createElement('div');ai.style.cssText='display:flex;gap:6px;align-items:center';ai.append(open,del);act.append(ai);
       tr.append(idx,td(field('w-name','text',p.name,'اسم الشريك',v=>up('name',v))),td(field('w-money','number',p.capital,'0',v=>up('capital',v))),
-        cell(fmt(t.spent)),cell(fmt(t.left),t.left<0?'neg':''),cell(t.n),cell(fmt(t.due)),cell(fmt(t.profit)),acct,act);
+        cell(fmt(t.spent)),cell(fmt(t.left),t.left<0?'neg':''),cell(t.n),cell(fmt(t.due)),cell(fmt(t.profit)),cell(fmt(Math.round(t.profit*S.share)/100),'pos'),acct,act);
       tb.append(tr);
     });
     const all={cap:0,spent:0,left:0,due:0,profit:0,paid:0,n:0};
     for(const p of S.partners){const t=stats(p.id);for(const k in all) all[k]+=t[k]}
     $('p-cap').textContent=fmt(all.cap);$('p-spent').textContent=fmt(all.spent);$('p-left').textContent=fmt(all.left);
-    $('p-n').textContent=all.n;$('p-due').textContent=fmt(all.due);$('p-profit').textContent=fmt(all.profit);
+    $('p-n').textContent=all.n;$('p-due').textContent=fmt(all.due);$('p-profit').textContent=fmt(all.profit);$('p-pshare').textContent=fmt(Math.round(all.profit*S.share)/100);$('th-share').textContent='نصيب الشريك '+S.share+'٪';
     showTiles(all);
   }
   $('add-partner').addEventListener('click',()=>run('new',()=>api('POST','/api/partner',{name:''})).then(load));
@@ -300,6 +303,11 @@
     btn.disabled=false;
   });
 
+  $('share-input').addEventListener('change',()=>{
+    const v=$('share-input').value;if(v===''||!(+v>=0&&+v<=100)){setVal($('share-input'),S.share);return}
+    S.share=+v;run('share',()=>api('PUT','/api/share',{share:+v}));refresh();
+  });
+
   /* ---------- pay ---------- */
   function renderPay(){
     const list=$('pay-list');const items=[];let due=0,paid=0,cnt=0,done=0;
@@ -349,7 +357,8 @@
     applyTabs();
     if(current) renderPartner(); else renderHome();
     $('sum-title').textContent=current?'كشف حساب '+((partner(current)||{}).name||''):'كشف حساب مهلة';
-    $('rate-card').hidden=!ADMIN;$('import-card').hidden=!(ADMIN&&!current&&!S.partners.length);
+    $('rate-card').hidden=!ADMIN;$('share-card').hidden=!ADMIN;
+    if(ADMIN){setVal($('share-input'),S.share);$('share-chip').textContent='الشريك '+S.share+'٪ · التشغيل '+(100-S.share)+'٪';$('share-ops').textContent='والتشغيل '+(100-S.share)+'٪'}$('import-card').hidden=!(ADMIN&&!current&&!S.partners.length);
     if(ADMIN){fillSelect($('apply-scope'),true,scopeRoute!==current?(scopeRoute=current,current||''):null);renderNew();setVal($('rate-input'),S.rate);$('rate-chip').textContent='الحالية '+S.rate+'٪';drawPresets($('presets'),S.rate,setRate,null)}
     renderPay();calcRate();if(tab==='all')renderAll();
   }

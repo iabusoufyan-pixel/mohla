@@ -75,6 +75,18 @@ def get_rate():
         return DEFAULT_RATE
 
 
+DEFAULT_SHARE = 50.0  # نصيب الشريك من الربح، والباقي للتشغيل
+
+
+def get_share():
+    s = db.session.get(Setting, "share")
+    try:
+        v = float(s.value) if s else DEFAULT_SHARE
+        return v if 0 <= v <= 100 else DEFAULT_SHARE
+    except (TypeError, ValueError):
+        return DEFAULT_SHARE
+
+
 def due_of(taken, rate):
     if taken is None:
         return None
@@ -234,7 +246,7 @@ def register(app):
             for c in Client.query.filter(Client.partner_id.in_(ids)).order_by(Client.slot):
                 clients.setdefault(str(c.partner_id), []).append(client_json(c))
         return jsonify(
-            role=u.role, username=u.username, rate=get_rate(),
+            role=u.role, username=u.username, rate=get_rate(), share=get_share(),
             partners=[{"id": p.id, "name": p.name or "", "capital": p.capital, "order": p.order,
                        "account": accounts.get(p.id) if u.role == "admin" else None} for p in partners],
             clients=clients)
@@ -387,6 +399,16 @@ def register(app):
         db.session.merge(s)
         db.session.commit()
         return jsonify(rate=r)
+
+    @app.route("/api/share", methods=["PUT"])
+    @login_required("admin")
+    def share_set():
+        v = num((request.json or {}).get("share"))
+        if v is None or v > 100:
+            abort(400)
+        db.session.merge(Setting(key="share", value=str(v)))
+        db.session.commit()
+        return jsonify(share=v)
 
     @app.route("/api/rate/apply", methods=["POST"])
     @login_required("admin")

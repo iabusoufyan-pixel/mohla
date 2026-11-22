@@ -20,7 +20,7 @@
 <link rel="apple-touch-icon" href="{{ url_for('static', filename='logo.svg') }}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@600;700&display=swap">
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=3">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=4">
 </head>
 <body data-role="{{ role }}">
 <div class="band gut"><div class="band-in">
@@ -42,6 +42,14 @@
   </div>
 
   <section class="view" id="v-summary" hidden style="display:flex;flex-direction:column;gap:18px">
+    <div class="card" id="share-card" hidden>
+      <div class="card-h"><h2>تقسيم الربح</h2><span class="ratechip" id="share-chip"></span></div>
+      <div class="ratebox">
+        <label class="pct" for="share-input">نصيب الشريك <input type="number" id="share-input" min="0" max="100" step="5" inputmode="decimal" class="num"> ٪</label>
+        <span class="note" id="share-ops"></span>
+        <p class="note">يُحسب من الربح المتوقع لكل شريك: نصيبه يظهر له في صفحته، والباقي للتشغيل.</p>
+      </div>
+    </div>
     <div class="card" id="rate-card" hidden>
       <div class="card-h"><h2>نسبة الربح</h2><span class="ratechip" id="rate-chip"></span></div>
       <div class="ratebox">
@@ -59,6 +67,8 @@
         <div class="row"><span class="k">المصروف على العملاء</span><span class="val num bad" id="s-spent">—</span></div>
         <div class="row"><span class="k">المطلوب من العملاء</span><span class="val num gold" id="s-due">—</span></div>
         <div class="row"><span class="k">الربح المتوقع</span><span class="val num good" id="s-profit">—</span></div>
+        <div class="row sub"><span class="k" id="s-pshare-k">نصيب الشريك</span><span class="val num good" id="s-pshare">—</span></div>
+        <div class="row sub"><span class="k" id="s-oshare-k">نصيب التشغيل</span><span class="val num" id="s-oshare">—</span></div>
         <div class="row"><span class="k">المسدَّد حتى الآن</span><span class="val num" id="s-paid">—</span></div>
         <div class="row total"><span class="k">الباقي من رأس المال</span><span class="val num" id="s-left">—</span></div>
       </div>
@@ -79,10 +89,10 @@
       <button id="add-partner" type="button">+ إضافة شريك</button>
     </div>
     <div class="scroll">
-      <table style="min-width:1080px">
-        <thead><tr><th>#</th><th>الاسم</th><th>رأس المال</th><th>المصروف</th><th>الباقي</th><th>العملاء</th><th>المطلوب</th><th>الربح</th><th>دخول الشريك</th><th></th></tr></thead>
+      <table style="min-width:1180px">
+        <thead><tr><th>#</th><th>الاسم</th><th>رأس المال</th><th>المصروف</th><th>الباقي</th><th>العملاء</th><th>المطلوب</th><th>الربح</th><th id="th-share">نصيب الشريك</th><th>دخول الشريك</th><th></th></tr></thead>
         <tbody id="partners"></tbody>
-        <tfoot><tr><td></td><td>المجموع</td><td class="num" id="p-cap">0</td><td class="num" id="p-spent">0</td><td class="num" id="p-left">0</td><td class="num" id="p-n">0</td><td class="num" id="p-due">0</td><td class="num" id="p-profit">0</td><td></td><td></td></tr></tfoot>
+        <tfoot><tr><td></td><td>المجموع</td><td class="num" id="p-cap">0</td><td class="num" id="p-spent">0</td><td class="num" id="p-left">0</td><td class="num" id="p-n">0</td><td class="num" id="p-due">0</td><td class="num" id="p-profit">0</td><td class="num" id="p-pshare">0</td><td></td><td></td></tr></tfoot>
       </table>
     </div>
     <p class="note">«فتح صفحته» يعرض عملاء الشريك. المصروف يُحسب تلقائيًا من مجموع ما أخذه عملاؤه. «إنشاء دخول» يعطي الشريك اسم مستخدم وكلمة مرور، فيدخل الموقع ويطّلع على صفحته فقط دون أن يعدّل شيئًا.</p>
@@ -205,6 +215,6 @@
 </div>
 
 <input type="file" id="file" accept="image/*,application/pdf" hidden>
-<script src="{{ url_for('static', filename='app.js') }}?v=3"></script>
+<script src="{{ url_for('static', filename='app.js') }}?v=4"></script>
 </body>
 </html>

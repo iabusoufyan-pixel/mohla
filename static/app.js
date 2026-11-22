@@ -90,7 +90,7 @@
       const cell=(v,cls)=>{const c=td();c.className='num calc'+(cls?' '+cls:'');c.textContent=v;return c};
       const acct=td();const ab=document.createElement('div');ab.className='acct';
       if(p.account){const u=document.createElement('span');u.className='u';u.textContent=p.account;ab.append(u)}
-      const mk=document.createElement('button');mk.type='button';mk.className='open';mk.textContent=p.account?'كلمة مرور جديدة':'إنشاء دخول';
+      const mk=document.createElement('button');mk.type='button';mk.className='open';mk.textContent=p.account?'تغيير كلمة المرور':'إنشاء دخول';
       mk.addEventListener('click',()=>openAcct(p));ab.append(mk);
       if(p.account){const rm=document.createElement('button');rm.type='button';rm.className='del';rm.style.fontSize='12px';rm.textContent='إيقاف';
         armed(rm,'إيقاف','تأكيد؟',()=>run('a'+p.id,()=>api('DELETE','/api/partner/'+p.id+'/account')).then(load));ab.append(rm)}
@@ -368,7 +368,7 @@
   /* ---------- partner account modal ---------- */
   let acctP=null;
   function openAcct(p){
-    acctP=p;$('acct-h').textContent='دخول '+(p.name||'الشريك');$('acct-user').value=p.account||'';$('acct-err').textContent='';
+    acctP=p;$('acct-h').textContent='دخول '+(p.name||'الشريك');$('acct-user').value=p.account||'';$('acct-pass').value='';$('acct-err').textContent='';
     $('acct-form').hidden=false;$('acct-done').hidden=true;$('acct-modal').hidden=false;$('acct-user').focus();
   }
   $('acct-cancel').addEventListener('click',()=>{$('acct-modal').hidden=true});
@@ -376,7 +376,7 @@
   $('acct-save').addEventListener('click',async()=>{
     $('acct-err').textContent='';
     try{
-      const j=await api('POST','/api/partner/'+acctP.id+'/account',{username:$('acct-user').value});
+      const j=await api('POST','/api/partner/'+acctP.id+'/account',{username:$('acct-user').value,password:$('acct-pass').value});
       const c=$('acct-cred');c.replaceChildren();
       const line=(k,v)=>{const d=document.createElement('div');d.append(k+': ');const b=document.createElement('b');b.textContent=v;d.append(b);c.append(d)};
       line('الرابط',location.origin);line('اسم المستخدم',j.username);line('كلمة المرور',j.password);

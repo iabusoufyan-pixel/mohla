@@ -283,8 +283,12 @@ def register(app):
         other = User.query.filter_by(username=name).first()
         if other and (not u or other.id != u.id):
             return jsonify(error="اسم المستخدم مستخدم من قبل"), 400
-        alphabet = "abcdefghjkmnpqrstuvwxyz23456789"
-        pw = "".join(secrets.choice(alphabet) for _ in range(8))
+        pw = ((request.json or {}).get("password") or "").strip()
+        if pw and len(pw) < 6:
+            return jsonify(error="كلمة المرور 6 أحرف أو أرقام على الأقل"), 400
+        if not pw:  # إذا تركها فارغة تُنشأ تلقائيًا
+            alphabet = "abcdefghjkmnpqrstuvwxyz23456789"
+            pw = "".join(secrets.choice(alphabet) for _ in range(8))
         if not u:
             u = User(role="partner", partner_id=p.id, username=name)
             db.session.add(u)

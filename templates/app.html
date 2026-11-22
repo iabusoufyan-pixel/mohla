@@ -10,7 +10,7 @@
 <link rel="apple-touch-icon" href="{{ url_for('static', filename='logo.svg') }}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@600;700&display=swap">
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=2">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=3">
 </head>
 <body data-role="{{ role }}">
 <div class="band gut"><div class="band-in">
@@ -171,12 +171,14 @@
     <div id="acct-form">
       <label class="note" for="acct-user">اسم المستخدم (بالإنجليزي)</label>
       <input type="text" id="acct-user" autocapitalize="off" style="direction:ltr">
+      <label class="note" for="acct-pass">كلمة المرور التي تختارها له (6 على الأقل)</label>
+      <input type="text" id="acct-pass" autocapitalize="off" autocomplete="off" spellcheck="false" style="direction:ltr" placeholder="اتركها فارغة لتُنشأ تلقائيًا">
       <div class="err-line" id="acct-err"></div>
-      <div class="act"><button type="button" class="primary" id="acct-save">إنشاء كلمة مرور</button><button type="button" id="acct-cancel">إلغاء</button></div>
+      <div class="act"><button type="button" class="primary" id="acct-save">حفظ الدخول</button><button type="button" id="acct-cancel">إلغاء</button></div>
     </div>
     <div id="acct-done" hidden>
       <div class="cred" id="acct-cred"></div>
-      <p class="note">انسخ البيانات وأرسلها للشريك الآن. كلمة المرور لا تظهر مرة ثانية، ولو نسيها تنشئ له واحدة جديدة.</p>
+      <p class="note">انسخ البيانات وأرسلها للشريك. كلمة المرور لا تُحفظ ظاهرة في الموقع، ولو نسيها تضع له واحدة جديدة من نفس الزر.</p>
       <div class="act"><button type="button" id="acct-copy">نسخ</button><button type="button" class="primary" id="acct-close">تم</button></div>
     </div>
   </div>
@@ -193,6 +195,6 @@
 </div>
 
 <input type="file" id="file" accept="image/*,application/pdf" hidden>
-<script src="{{ url_for('static', filename='app.js') }}?v=2"></script>
+<script src="{{ url_for('static', filename='app.js') }}?v=3"></script>
 </body>
 </html>

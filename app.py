@@ -222,10 +222,11 @@ def register(app):
     def state():
         u = request.user
         if u.role == "admin":
-            partners = Partner.query.order_by(Partner.order, Partner.id).all()
+            partners = Partner.query.all()
         else:
             partners = [db.session.get(Partner, u.partner_id)] if u.partner_id else []
             partners = [p for p in partners if p]
+        partners.sort(key=lambda p: (-(p.capital or 0), p.order or 0, p.id))  # الأعلى رأس مال أولًا
         ids = [p.id for p in partners]
         accounts = {x.partner_id: x.username for x in User.query.filter(User.partner_id.in_(ids))} if ids else {}
         clients = {}
@@ -316,6 +317,23 @@ def register(app):
         db.session.commit()
         return jsonify(client_json(c))
 
+    @app.route("/api/client/<int:pid>", methods=["POST"])
+    @login_required("admin")
+    def client_new(pid):
+        if not db.session.get(Partner, pid):
+            abort(404)
+        d = request.json or {}
+        top = db.session.query(db.func.max(Client.slot)).filter(Client.partner_id == pid).scalar() or 0
+        c = Client(partner_id=pid, slot=top + 1, name=text(d.get("name"), 160), nid=text(d.get("nid"), 40),
+                   phone=text(d.get("phone"), 40), paid=False)
+        c.taken = num(d.get("taken"))
+        if c.taken is not None:
+            c.rate = get_rate()
+            c.due = due_of(c.taken, c.rate)
+        db.session.add(c)
+        db.session.commit()
+        return jsonify(client_json(c))
+
     @app.route("/api/client/<int:pid>/<int:slot>/bond", methods=["POST"])
     @login_required("admin")
     def client_bond(pid, slot):
@@ -371,7 +389,11 @@ def register(app):
     def rate_apply():
         r = get_rate()
         n = 0
-        for c in Client.query.filter(Client.taken.isnot(None)):
+        q = Client.query.filter(Client.taken.isnot(None))
+        pid = (request.get_json(silent=True) or {}).get("partner_id")
+        if pid:
+            q = q.filter(Client.partner_id == int(pid))
+        for c in q:
             d = due_of(c.taken, r)
             if c.due != d or c.rate != r:
                 c.due, c.rate = d, r

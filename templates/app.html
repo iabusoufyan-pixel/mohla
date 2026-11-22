@@ -37,8 +37,9 @@
       <div class="ratebox">
         <div class="presets" id="presets" role="group" aria-label="نسب جاهزة"></div>
         <label class="pct" for="rate-input"><input type="number" id="rate-input" min="0" step="0.5" inputmode="decimal" class="num"> ٪</label>
-        <button type="button" id="apply-rate">تعميم على كل العملاء</button>
-        <p class="note">تُطبَّق تلقائيًا على أي مبلغ تكتبه في خانة «المأخوذ»، فيُحسب «المطلوب» بنفسه. زر التعميم يعيد حساب «المطلوب» لكل العملاء المسجّلين عند كل الشركاء بهذه النسبة.</p>
+        <select id="apply-scope" aria-label="تعميم النسبة على"></select>
+        <button type="button" id="apply-rate">تعميم النسبة</button>
+        <p class="note">تُطبَّق تلقائيًا على أي مبلغ تكتبه في خانة «المأخوذ»، فيُحسب «المطلوب» بنفسه. زر «تعميم النسبة» يعيد حساب «المطلوب» بهذه النسبة لعملاء كل الشركاء، أو لعملاء شريك واحد تختاره من القائمة.</p>
       </div>
     </div>
     <div class="card">
@@ -94,6 +95,28 @@
       </table>
     </div>
     <p class="note" id="clients-note">التعديل يُحفظ تلقائيًا عند الخروج من الخانة. زر واتساب يفتح محادثة العميل.</p>
+  </section>
+
+  <section class="view" id="v-new" hidden>
+    <div class="card">
+      <div class="card-h"><h2>إضافة عميل جديد</h2><span class="ratechip" id="n-rate"></span></div>
+      <form id="new-form" class="nform" novalidate>
+        <label class="wide">الشريك الذي يتبع له العميل
+          <select id="n-partner" required></select></label>
+        <label>اسم العميل<input id="n-name" type="text" required autocomplete="off"></label>
+        <label>رقم الهوية<input id="n-nid" type="text" inputmode="numeric" dir="ltr" autocomplete="off"></label>
+        <label>الجوال<input id="n-phone" type="tel" dir="ltr" placeholder="05xxxxxxxx" autocomplete="off"></label>
+        <label>المبلغ المأخوذ<input id="n-taken" type="number" inputmode="decimal" min="0" step="any" class="num"></label>
+        <div class="nsum wide"><span>المطلوب من العميل <b class="num" id="n-due">0</b></span><span>الربح <b class="num" id="n-profit">0</b></span></div>
+        <label class="wide">صورة السند (اختياري)<input id="n-bond" type="file" accept="image/*,application/pdf"></label>
+        <div class="err-line wide" id="n-err"></div>
+        <div class="wide"><button class="primary" type="submit" id="n-save">حفظ العميل</button></div>
+      </form>
+    </div>
+    <div class="card" id="n-done" hidden>
+      <div class="card-h"><h2>تم الحفظ</h2></div>
+      <p class="ratebox" id="n-done-txt"></p>
+    </div>
   </section>
 
   <section class="view" id="v-pay" hidden>

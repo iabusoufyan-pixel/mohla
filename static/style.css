@@ -165,3 +165,14 @@ body{padding-top:0}
 textarea{font:inherit;font-size:13px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);padding:8px;width:100%;min-height:120px;direction:ltr}
 .band{margin-top:0}
 [hidden]{display:none!important}
+
+.nform{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 14px;padding:8px 18px 18px}
+.nform .wide{grid-column:1/-1}
+.nform label{display:flex;flex-direction:column;gap:6px;font-size:14px;color:var(--muted)}
+.nform input,.nform select{font:inherit;font-size:16px;color:var(--fg);padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);width:100%;min-width:0}
+.nform input[type=file]{font-size:14px;padding:8px}
+.nform input:focus,.nform select:focus{outline:2px solid var(--accent);outline-offset:1px}
+.nsum{display:flex;gap:18px;flex-wrap:wrap;background:var(--surface-2);border:1px dashed var(--gold);border-radius:10px;padding:10px 12px;font-size:14px}
+.nsum b{font-size:18px;color:var(--gold)}
+#apply-scope{font:inherit;font-size:14px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);color:var(--fg);max-width:200px}
+@media (max-width:560px){.nform{grid-template-columns:1fr}}

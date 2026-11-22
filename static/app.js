@@ -9,7 +9,7 @@
   const MIN_CLIENTS=20, PRESETS=[10,20,30];
 
   let S={rate:14,partners:[],clients:{}};   // server state
-  let current=null, tab=null, extra=0, loaded=false;
+  let current=null, tab=null, extra=0, loaded=false, scopeRoute=undefined;
 
   /* ---------- api ---------- */
   async function api(method,url,body){
@@ -25,7 +25,7 @@
   async function load(){
     try{
       const j=await api('GET','/api/state');
-      S={rate:j.rate,partners:j.partners,clients:j.clients||{}};
+      S={rate:j.rate,partners:j.partners,clients:j.clients||{}};sortPartners();
       if(!loaded){loaded=true;setStatus('البيانات محدّثة')}
       route();
     }catch(e){if(e.message!=='login')setStatus('تعذّر تحميل البيانات، تأكد من الاتصال',true)}
@@ -38,6 +38,7 @@
   }
 
   /* ---------- helpers ---------- */
+  function sortPartners(){S.partners.sort((a,b)=>(+b.capital||0)-(+a.capital||0)||(a.order||0)-(b.order||0)||a.id-b.id)}
   const partner=id=>S.partners.find(p=>String(p.id)===String(id));
   const clientsOf=id=>S.clients[String(id)]||[];
   const clientAt=(id,slot)=>clientsOf(id).find(c=>c.slot===slot);
@@ -83,7 +84,7 @@
     if(!S.partners.length){const tr=document.createElement('tr');const c=td();c.colSpan=10;c.className='empty';c.textContent='لا يوجد شركاء بعد. اضغط «إضافة شريك».';tr.append(c);tb.append(tr)}
     S.partners.forEach((p,k)=>{
       const tr=document.createElement('tr');
-      const up=(f,v)=>{p[f]=v;run('p'+p.id,()=>api('PUT','/api/partner/'+p.id,{[f]:v}));refresh()};
+      const up=(f,v)=>{p[f]=v;if(f==='capital')sortPartners();run('p'+p.id,()=>api('PUT','/api/partner/'+p.id,{[f]:v}));refresh()};
       const idx=td();idx.className='idx';idx.textContent=k+1;
       const t=stats(p.id);
       const cell=(v,cls)=>{const c=td();c.className='num calc'+(cls?' '+cls:'');c.textContent=v;return c};
@@ -199,7 +200,7 @@
   }
   $('cap-input').addEventListener('change',()=>{
     const p=partner(current);if(!p||!ADMIN) return;const v=$('cap-input').value===''?null:+$('cap-input').value;
-    p.capital=v;run('p'+p.id,()=>api('PUT','/api/partner/'+p.id,{capital:v}));refresh();
+    p.capital=v;sortPartners();run('p'+p.id,()=>api('PUT','/api/partner/'+p.id,{capital:v}));refresh();
   });
   $('add-client').addEventListener('click',()=>{extra++;renderPartner();const r=cRows.get(slotCount(current));if(r)setTimeout(()=>r.name.focus(),0)});
 
@@ -211,8 +212,48 @@
   }
   function setRate(v){S.rate=v;run('rate',()=>api('PUT','/api/rate',{rate:v}));refresh()}
   $('rate-input').addEventListener('change',()=>{const v=$('rate-input').value;if(v===''||!(+v>=0)){setVal($('rate-input'),S.rate);return}setRate(+v)});
-  armed($('apply-rate'),'تعميم على كل العملاء','تأكيد: إعادة حساب كل العملاء',()=>{
-    run('apply',()=>api('POST','/api/rate/apply')).then(j=>{setStatus('تم تعميم '+j.rate+'٪ على '+j.changed+' عميل');load()}).catch(()=>{});
+  armed($('apply-rate'),'تعميم النسبة','تأكيد إعادة الحساب',()=>{
+    const pid=$('apply-scope').value;const who=pid?((partner(pid)||{}).name||'الشريك'):'كل الشركاء';
+    run('apply',()=>api('POST','/api/rate/apply',pid?{partner_id:+pid}:{})).then(j=>{setStatus('تم تعميم '+j.rate+'٪ على '+j.changed+' عميل عند '+who);load()}).catch(()=>{});
+  });
+  function fillSelect(sel,withAll,keep){
+    const v=sel.value;
+    const opts=[];if(withAll)opts.push(['','كل الشركاء']);
+    for(const p of S.partners) opts.push([String(p.id),p.name||'شريك بدون اسم']);
+    const key=opts.map(o=>o.join(':')).join('|');
+    if(sel.dataset.k!==key){sel.dataset.k=key;sel.replaceChildren(...opts.map(([val,l])=>{const o=document.createElement('option');o.value=val;o.textContent=l;return o}))}
+    const want=keep!=null?String(keep):v;
+    if(opts.some(o=>o[0]===want)) sel.value=want;
+  }
+
+  /* ---------- new client ---------- */
+  function newCalc(){
+    const t=$('n-taken').value===''?null:+$('n-taken').value;
+    const d=t==null?0:Math.round(t*(1+S.rate/100)*100)/100;
+    $('n-due').textContent=fmt(d);$('n-profit').textContent=fmt(t==null?0:d-t);$('n-rate').textContent='نسبة الربح '+S.rate+'٪';
+  }
+  function renderNew(){fillSelect($('n-partner'),false,$('n-partner').dataset.pref||null);delete $('n-partner').dataset.pref;newCalc()}
+  $('n-taken').addEventListener('input',newCalc);
+  $('new-form').addEventListener('submit',async e=>{
+    e.preventDefault();$('n-err').textContent='';
+    const pid=$('n-partner').value;const name=$('n-name').value.trim();
+    if(!pid){$('n-err').textContent='اختر الشريك';return}
+    if(!name){$('n-err').textContent='اكتب اسم العميل';$('n-name').focus();return}
+    const t=$('n-taken').value===''?null:+$('n-taken').value;
+    const btn=$('n-save');btn.disabled=true;
+    try{
+      const c=await run('new-'+pid,()=>api('POST','/api/client/'+pid,{name,nid:$('n-nid').value,phone:$('n-phone').value,taken:t}));
+      const f=$('n-bond').files[0];
+      if(f){const fd=new FormData();fd.append('file',f);try{await run('c'+pid+'-'+c.slot,()=>api('POST','/api/client/'+pid+'/'+c.slot+'/bond',fd))}catch(err){$('n-err').textContent='حُفظ العميل لكن تعذّر رفع السند: '+err.message}}
+      const pn=(partner(pid)||{}).name||'الشريك';
+      const txt=$('n-done-txt');txt.replaceChildren();
+      txt.append('أُضيف «'+name+'» إلى عملاء '+pn+(t!=null?' بمبلغ '+fmt(t)+'، والمطلوب '+fmt(c.due)+' ريال':'')+'. ');
+      const a=document.createElement('a');a.href='#p'+pid;a.textContent='فتح صفحة '+pn;a.style.color='var(--accent)';a.style.fontWeight='700';txt.append(a);
+      $('n-done').hidden=false;
+      for(const id of ['n-name','n-nid','n-phone','n-taken']) $(id).value='';$('n-bond').value='';newCalc();
+      await load();
+    }catch(err){$('n-err').textContent=err.message}
+    btn.disabled=false;
   });
 
   /* ---------- pay ---------- */
@@ -249,22 +290,23 @@
 
   /* ---------- tabs / routing ---------- */
   function tabsFor(){
-    if(ADMIN&&!current) return [['summary','الملخص'],['partners','الشركاء'],['pay','السداد']];
+    if(ADMIN&&!current) return [['summary','الملخص'],['partners','الشركاء'],['new','عميل جديد'],['pay','السداد']];
+    if(ADMIN) return [['summary','الملخص'],['clients','العملاء'],['new','عميل جديد'],['pay','السداد']];
     return [['summary','الملخص'],['clients','العملاء'],['pay','السداد']];
   }
   function applyTabs(){
     const list=tabsFor();if(!list.some(t=>t[0]===tab)) tab=list[1][0];
     const box=$('tabs');const key=list.map(t=>t[0]).join();
-    if(box.dataset.k!==key){box.dataset.k=key;box.replaceChildren(...list.map(([k,l])=>{const b=document.createElement('button');b.type='button';b.className='tab';b.setAttribute('role','tab');b.dataset.tab=k;b.textContent=l;b.addEventListener('click',()=>{tab=k;refresh()});return b}))}
+    if(box.dataset.k!==key){box.dataset.k=key;box.replaceChildren(...list.map(([k,l])=>{const b=document.createElement('button');b.type='button';b.className='tab';b.setAttribute('role','tab');b.dataset.tab=k;b.textContent=l;b.addEventListener('click',()=>{tab=k;if(k==='new'){$('n-done').hidden=true;if(current)$('n-partner').dataset.pref=current}refresh()});return b}))}
     for(const b of box.children) b.setAttribute('aria-selected',String(b.dataset.tab===tab));
-    $('v-summary').hidden=tab!=='summary';$('v-home').hidden=tab!=='partners';$('v-partner').hidden=tab!=='clients';$('v-pay').hidden=tab!=='pay';
+    $('v-summary').hidden=tab!=='summary';$('v-home').hidden=tab!=='partners';$('v-partner').hidden=tab!=='clients';$('v-pay').hidden=tab!=='pay';$('v-new').hidden=tab!=='new';
   }
   function refresh(){
     applyTabs();
     if(current) renderPartner(); else renderHome();
     $('sum-title').textContent=current?'كشف حساب '+((partner(current)||{}).name||''):'كشف حساب مهلة';
     $('rate-card').hidden=!ADMIN;$('import-card').hidden=!(ADMIN&&!current&&!S.partners.length);
-    if(ADMIN){setVal($('rate-input'),S.rate);$('rate-chip').textContent='الحالية '+S.rate+'٪';drawPresets($('presets'),S.rate,setRate,null)}
+    if(ADMIN){fillSelect($('apply-scope'),true,scopeRoute!==current?(scopeRoute=current,current||''):null);renderNew();setVal($('rate-input'),S.rate);$('rate-chip').textContent='الحالية '+S.rate+'٪';drawPresets($('presets'),S.rate,setRate,null)}
     renderPay();calcRate();
   }
   function route(){

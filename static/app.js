@@ -68,6 +68,7 @@
     const ps=Math.round(t.profit*S.share)/100;
     $('s-pshare-k').textContent=(current?'نصيب الشريك':'نصيب الشركاء')+' ('+S.share+'٪)';$('s-pshare').textContent=fmt(ps);
     $('s-oshare-k').textContent='نصيب التشغيل ('+(100-S.share)+'٪)';$('s-oshare').textContent=fmt(t.profit-ps);
+    $('s-oshare').parentElement.hidden=!ADMIN;if(!ADMIN)$('s-pshare-k').textContent='نصيبك من الربح';
     $('s-due').textContent=fmt(t.due);$('s-profit').textContent=fmt(t.profit);$('s-paid').textContent=fmt(t.paid);
     $('s-left').style.color=t.left<0?'var(--bad)':'';
     $('hb').innerHTML='';$('hb').append(fmt(t.left));const c=document.createElement('span');c.className='cur';c.textContent='ريال';$('hb').append(c);

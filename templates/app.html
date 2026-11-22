@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>دفتر مهلة</title>
+<meta name="theme-color" content="#133029">
+<meta name="csrf" content="{{ csrf }}">
+<link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='logo.svg') }}">
+<link rel="apple-touch-icon" href="{{ url_for('static', filename='logo.svg') }}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@600;700&display=swap">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=1">
+</head>
+<body data-role="{{ role }}">
+<div class="band gut"><div class="band-in">
+  <div class="brand">
+    <img class="emblem" src="{{ url_for('static', filename='logo.svg') }}" alt="">
+    <div>
+      <h1 id="title">دفتر مهلة </h1><small id="subtitle">رؤوس الأموال والعملاء</small>
+      <div class="who"><span>{{ username }}</span><button type="button" id="pw-open">كلمة المرور</button><a href="{{ url_for('logout') }}">خروج</a></div>
+    </div>
+  </div>
+  <div class="bal"><span>الباقي من رأس المال</span><b class="num" id="hb">—</b></div>
+</div></div>
+<nav class="tabs gut" aria-label="أقسام الدفتر"><div class="tabs-in" id="tabs" role="tablist"></div></nav>
+
+<div class="wrap gut">
+  <div class="bar">
+    <nav class="crumbs" id="crumbs" hidden><a href="#">→ كل الشركاء</a></nav>
+    <span class="status" id="status">جارٍ تحميل البيانات…</span>
+  </div>
+
+  <section class="view" id="v-summary" hidden style="display:flex;flex-direction:column;gap:18px">
+    <div class="card" id="rate-card" hidden>
+      <div class="card-h"><h2>نسبة الربح</h2><span class="ratechip" id="rate-chip"></span></div>
+      <div class="ratebox">
+        <div class="presets" id="presets" role="group" aria-label="نسب جاهزة"></div>
+        <label class="pct" for="rate-input"><input type="number" id="rate-input" min="0" step="0.5" inputmode="decimal" class="num"> ٪</label>
+        <button type="button" id="apply-rate">تعميم على كل العملاء</button>
+        <p class="note">تُطبَّق تلقائيًا على أي مبلغ تكتبه في خانة «المأخوذ»، فيُحسب «المطلوب» بنفسه. زر التعميم يعيد حساب «المطلوب» لكل العملاء المسجّلين عند كل الشركاء بهذه النسبة.</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-h"><h2 id="sum-title">كشف الحساب</h2><span class="pill" id="sum-pill">—</span></div>
+      <div class="rows">
+        <div class="row"><span class="k">رأس المال</span><span class="val num" id="s-cap">—</span></div>
+        <div class="row"><span class="k">المصروف على العملاء</span><span class="val num bad" id="s-spent">—</span></div>
+        <div class="row"><span class="k">المطلوب من العملاء</span><span class="val num gold" id="s-due">—</span></div>
+        <div class="row"><span class="k">الربح المتوقع</span><span class="val num good" id="s-profit">—</span></div>
+        <div class="row"><span class="k">المسدَّد حتى الآن</span><span class="val num" id="s-paid">—</span></div>
+        <div class="row total"><span class="k">الباقي من رأس المال</span><span class="val num" id="s-left">—</span></div>
+      </div>
+    </div>
+    <div class="card" id="import-card" hidden>
+      <div class="card-h"><h2>استيراد بيانات</h2></div>
+      <div class="ratebox" style="flex-direction:column;align-items:stretch">
+        <label class="note" for="import-text">الصق نص الاستيراد هنا (مرة واحدة فقط، يضيف الشركاء والعملاء).</label>
+        <textarea id="import-text"></textarea>
+        <div><button type="button" id="import-btn">استيراد</button></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="view" id="v-home" hidden>
+    <div class="sec-head">
+      <h2>الشركاء</h2>
+      <button id="add-partner" type="button">+ إضافة شريك</button>
+    </div>
+    <div class="scroll">
+      <table style="min-width:1080px">
+        <thead><tr><th>#</th><th>الاسم</th><th>رأس المال</th><th>المصروف</th><th>الباقي</th><th>العملاء</th><th>المطلوب</th><th>الربح</th><th>دخول الشريك</th><th></th></tr></thead>
+        <tbody id="partners"></tbody>
+        <tfoot><tr><td></td><td>المجموع</td><td class="num" id="p-cap">0</td><td class="num" id="p-spent">0</td><td class="num" id="p-left">0</td><td class="num" id="p-n">0</td><td class="num" id="p-due">0</td><td class="num" id="p-profit">0</td><td></td><td></td></tr></tfoot>
+      </table>
+    </div>
+    <p class="note">«فتح صفحته» يعرض عملاء الشريك. المصروف يُحسب تلقائيًا من مجموع ما أخذه عملاؤه. «إنشاء دخول» يعطي الشريك اسم مستخدم وكلمة مرور، فيدخل الموقع ويطّلع على صفحته فقط دون أن يعدّل شيئًا.</p>
+  </section>
+
+  <section class="view" id="v-partner" hidden>
+    <div class="sec-head">
+      <h2>العملاء <span class="ratechip" id="rate-chip2"></span></h2>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center" id="partner-tools">
+        <label for="cap-input" class="note">رأس المال</label>
+        <input type="number" id="cap-input" class="w-money" style="width:140px;border-color:var(--line)" placeholder="0">
+        <button id="add-client" type="button">+ إضافة عميل</button>
+      </div>
+    </div>
+    <div class="scroll">
+      <table style="min-width:1020px">
+        <thead><tr><th>#</th><th>الاسم</th><th>الهوية</th><th>صورة السند</th><th>المأخوذ</th><th>المطلوب</th><th>الربح</th><th>الجوال</th><th>مسدَّد</th></tr></thead>
+        <tbody id="clients"></tbody>
+        <tfoot><tr><td></td><td>المجموع</td><td></td><td></td><td class="num" id="c-taken">0</td><td class="num" id="c-due">0</td><td class="num" id="c-profit">0</td><td></td><td class="num" id="c-paid">0</td></tr></tfoot>
+      </table>
+    </div>
+    <p class="note" id="clients-note">التعديل يُحفظ تلقائيًا عند الخروج من الخانة. زر واتساب يفتح محادثة العميل.</p>
+  </section>
+
+  <section class="view" id="v-pay" hidden>
+    <div class="card">
+      <div class="card-h"><h2>السداد</h2><span class="pill" id="pay-pill">—</span></div>
+      <div class="prog"><i id="pay-bar"></i></div>
+      <div class="prog-l"><span id="pay-txt">—</span><span id="pay-left">—</span></div>
+    </div>
+    <div class="card"><div class="plist" id="pay-list"></div></div>
+  </section>
+</div>
+
+<button type="button" class="calc-fab" id="calc-open" aria-expanded="false" aria-controls="calc">🧮 الحاسبة</button>
+<div class="calcpanel" id="calc" hidden role="dialog" aria-label="الحاسبة">
+  <div class="calc-h"><b>الحاسبة</b><button type="button" id="calc-close" aria-label="إغلاق الحاسبة">✕</button></div>
+  <div class="calc-quick">
+    <label for="q-amount">حاسبة المهلة: اكتب المبلغ واختر النسبة</label>
+    <div class="presets" id="q-presets" role="group" aria-label="نسبة الحاسبة"></div>
+    <input type="number" id="q-amount" inputmode="decimal" min="0" class="num" placeholder="1000">
+    <div class="res"><span>الربح</span><b class="num" id="q-profit">0</b></div>
+    <div class="res"><span>المطلوب من العميل</span><b class="num" id="q-total">0</b></div>
+  </div>
+  <div class="calc-disp"><div class="ex" id="c-ex"></div><div class="out num" id="c-out">0</div></div>
+  <div class="keys" id="keys"></div>
+</div>
+
+<div class="modal" id="acct-modal" hidden role="dialog" aria-labelledby="acct-h">
+  <div class="box">
+    <h3 id="acct-h">دخول الشريك</h3>
+    <div id="acct-form">
+      <label class="note" for="acct-user">اسم المستخدم (بالإنجليزي)</label>
+      <input type="text" id="acct-user" autocapitalize="off" style="direction:ltr">
+      <div class="err-line" id="acct-err"></div>
+      <div class="act"><button type="button" class="primary" id="acct-save">إنشاء كلمة مرور</button><button type="button" id="acct-cancel">إلغاء</button></div>
+    </div>
+    <div id="acct-done" hidden>
+      <div class="cred" id="acct-cred"></div>
+      <p class="note">انسخ البيانات وأرسلها للشريك الآن. كلمة المرور لا تظهر مرة ثانية، ولو نسيها تنشئ له واحدة جديدة.</p>
+      <div class="act"><button type="button" id="acct-copy">نسخ</button><button type="button" class="primary" id="acct-close">تم</button></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="pw-modal" hidden role="dialog" aria-labelledby="pw-h">
+  <div class="box">
+    <h3 id="pw-h">تغيير كلمة المرور</h3>
+    <label class="note" for="pw-old">الحالية</label><input type="password" id="pw-old" autocomplete="current-password">
+    <label class="note" for="pw-new">الجديدة</label><input type="password" id="pw-new" autocomplete="new-password">
+    <div class="err-line" id="pw-err"></div>
+    <div class="act"><button type="button" class="primary" id="pw-save">حفظ</button><button type="button" id="pw-cancel">إلغاء</button></div>
+  </div>
+</div>
+
+<input type="file" id="file" accept="image/*,application/pdf" hidden>
+<script src="{{ url_for('static', filename='app.js') }}?v=1"></script>
+</body>
+</html>

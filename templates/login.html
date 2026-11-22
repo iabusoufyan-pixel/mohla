@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>دخول · دفتر مهلة</title>
+<meta name="theme-color" content="#133029">
+<link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='logo.svg') }}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;600;700&family=Noto+Naskh+Arabic:wght@700&display=swap">
+<style>
+:root{--bg:#f2ede3;--surface:#fffcf6;--line:#e3dac7;--fg:#1f2a26;--muted:#7a7262;--band:#133029;--gold:#b8913f;--bad:#9e3a2f}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:var(--bg);color:var(--fg);font-family:'IBM Plex Sans Arabic',Tahoma,sans-serif;display:flex;flex-direction:column}
+.band{background:var(--band);border-bottom:3px solid var(--gold);padding:calc(28px + env(safe-area-inset-top,0px)) 16px 28px;text-align:center;color:#f3efe6}
+.band img{width:56px;height:56px}
+.band h1{margin:8px 0 0;font-family:'Noto Naskh Arabic',serif;font-size:30px}
+.band p{margin:4px 0 0;color:#b9c4bc;font-size:14px}
+form{width:min(380px,calc(100% - 32px));margin:28px auto;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:12px}
+label{font-size:14px;color:var(--muted)}
+input{font:inherit;font-size:17px;padding:12px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--fg);direction:ltr;text-align:right}
+input:focus{outline:2px solid var(--band);outline-offset:1px}
+button{font:inherit;font-size:17px;font-weight:700;padding:13px;border:0;border-radius:999px;background:var(--band);color:#f3efe6;cursor:pointer;margin-top:6px}
+.err{background:#fbecea;color:var(--bad);border-radius:10px;padding:10px 12px;font-size:14px}
+</style>
+</head>
+<body>
+<div class="band">
+  <img src="{{ url_for('static', filename='logo.svg') }}" alt="">
+  <h1>دفتر مهلة</h1>
+  <p>رؤوس الأموال والعملاء</p>
+</div>
+<form method="post" autocomplete="on">
+  {% if err %}<div class="err">{{ err }}</div>{% endif %}
+  <label for="u">اسم المستخدم</label>
+  <input id="u" name="username" autocomplete="username" autocapitalize="off" required>
+  <label for="p">كلمة المرور</label>
+  <input id="p" name="password" type="password" autocomplete="current-password" required>
+  <button type="submit">دخول</button>
+</form>
+</body>
+</html>

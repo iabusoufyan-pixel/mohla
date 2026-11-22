@@ -10,7 +10,7 @@
 <link rel="apple-touch-icon" href="{{ url_for('static', filename='logo.svg') }}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@600;700&display=swap">
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=1">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=2">
 </head>
 <body data-role="{{ role }}">
 <div class="band gut"><div class="band-in">
@@ -97,6 +97,28 @@
     <p class="note" id="clients-note">التعديل يُحفظ تلقائيًا عند الخروج من الخانة. زر واتساب يفتح محادثة العميل.</p>
   </section>
 
+  <section class="view" id="v-all" hidden>
+    <div class="sec-head">
+      <h2>كل العملاء <span class="ratechip" id="all-count"></span></h2>
+      <div class="allbar">
+        <input type="search" id="all-q" placeholder="ابحث بالاسم أو الهوية أو الجوال" aria-label="بحث في العملاء">
+        <div class="presets" id="all-filter" role="group" aria-label="تصفية حسب السداد">
+          <button type="button" data-f="all" aria-pressed="true">الكل</button>
+          <button type="button" data-f="open" aria-pressed="false">متبقٍّ</button>
+          <button type="button" data-f="paid" aria-pressed="false">مسدَّد</button>
+        </div>
+      </div>
+    </div>
+    <div class="scroll">
+      <table style="min-width:1000px">
+        <thead><tr><th>#</th><th>الشريك</th><th>الاسم</th><th>الهوية</th><th>السند</th><th>المأخوذ</th><th>المطلوب</th><th>الربح</th><th>الجوال</th><th>الحالة</th></tr></thead>
+        <tbody id="all-rows"></tbody>
+        <tfoot><tr><td></td><td>المجموع</td><td></td><td></td><td></td><td class="num" id="a-taken">0</td><td class="num" id="a-due">0</td><td class="num" id="a-profit">0</td><td></td><td></td></tr></tfoot>
+      </table>
+    </div>
+    <p class="note">اضغط اسم الشريك لفتح صفحته وتعديل بيانات عملائه.</p>
+  </section>
+
   <section class="view" id="v-new" hidden>
     <div class="card">
       <div class="card-h"><h2>إضافة عميل جديد</h2><span class="ratechip" id="n-rate"></span></div>
@@ -171,6 +193,6 @@
 </div>
 
 <input type="file" id="file" accept="image/*,application/pdf" hidden>
-<script src="{{ url_for('static', filename='app.js') }}?v=1"></script>
+<script src="{{ url_for('static', filename='app.js') }}?v=2"></script>
 </body>
 </html>

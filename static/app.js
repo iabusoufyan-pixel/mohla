@@ -226,6 +226,50 @@
     if(opts.some(o=>o[0]===want)) sel.value=want;
   }
 
+  /* ---------- all clients ---------- */
+  let allFilter='all';
+  function renderAll(){
+    const q=$('all-q').value.trim().toLowerCase();
+    const rows=[];
+    for(const p of S.partners) for(const c of clientsOf(p.id)){
+      if(!(c.name||c.taken||c.due||c.phone||c.nid)) continue;
+      if(allFilter==='paid'&&!c.paid) continue;
+      if(allFilter==='open'&&c.paid) continue;
+      if(q&&![c.name,c.nid,c.phone,p.name].some(x=>String(x||'').toLowerCase().includes(q))) continue;
+      rows.push([p,c]);
+    }
+    const tb=$('all-rows');tb.replaceChildren();
+    let taken=0,due=0;
+    rows.forEach(([p,c],k)=>{
+      taken+=+c.taken||0;due+=+c.due||0;
+      const tr=document.createElement('tr');if(c.paid)tr.className='is-paid';
+      const cell=(v,cls)=>{const t=td();if(cls)t.className=cls;if(v instanceof Node)t.append(v);else t.textContent=v??'';return t};
+      const pa=document.createElement('a');pa.href='#p'+p.id;pa.textContent=p.name||'شريك';
+      const has=c.taken!=null&&c.due!=null;
+      const ph=document.createElement('div');ph.className='phone';
+      const pn=document.createElement('span');pn.className='num';pn.textContent=c.phone||'—';ph.append(pn);
+      const wl=waLink(c.phone);if(wl){const a=document.createElement('a');a.className='btn wa';a.href=wl;a.target='_blank';a.rel='noopener';a.textContent='واتساب';ph.append(a)}
+      const st=document.createElement('span');st.className='pill'+(c.paid?' ok':'');st.textContent=c.paid?'مسدَّد':'متبقٍّ';
+      const nid=document.createElement('span');nid.className='num';nid.textContent=c.nid||'—';
+      const pc=cell(pa,'pn');pc.classList.add('keep');
+      tr.append(cell(k+1,'idx'),pc,cell(c.name||'—'),cell(nid),cell(bondView(c)),cell(c.taken!=null?fmt(c.taken):'—','num'),
+        cell(c.due!=null?fmt(c.due):'—','num calc'),cell(has?fmt(c.due-c.taken):'—','num calc'+(has&&c.due-c.taken>0?' pos':'')),cell(ph),cell(st,'keep'));
+      tb.append(tr);
+    });
+    if(!rows.length){const tr=document.createElement('tr');const c=td();c.colSpan=10;c.className='empty';c.textContent=q||allFilter!=='all'?'لا يوجد عملاء بهذا البحث.':'لا يوجد عملاء مسجّلون بعد.';tr.append(c);tb.append(tr)}
+    $('a-taken').textContent=fmt(taken);$('a-due').textContent=fmt(due);$('a-profit').textContent=fmt(due-taken);
+    $('all-count').textContent=rows.length+' عميل';
+  }
+  function bondView(c){
+    if(!c.bond) return '—';
+    const src='/bond/'+c.bond;
+    if((c.bondType||'').includes('pdf')){const a=document.createElement('a');a.className='pdf';a.href=src;a.target='_blank';a.rel='noopener';a.textContent='PDF';const w=document.createElement('div');w.className='bond';w.append(a);return w}
+    const img=document.createElement('img');img.src=src;img.alt='صورة السند';img.loading='lazy';img.addEventListener('click',()=>openLight(src));
+    const w=document.createElement('div');w.className='bond';w.append(img);return w;
+  }
+  $('all-q').addEventListener('input',renderAll);
+  for(const b of $('all-filter').children) b.addEventListener('click',()=>{allFilter=b.dataset.f;for(const x of $('all-filter').children)x.setAttribute('aria-pressed',String(x===b));renderAll()});
+
   /* ---------- new client ---------- */
   function newCalc(){
     const t=$('n-taken').value===''?null:+$('n-taken').value;
@@ -290,7 +334,7 @@
 
   /* ---------- tabs / routing ---------- */
   function tabsFor(){
-    if(ADMIN&&!current) return [['summary','الملخص'],['partners','الشركاء'],['new','عميل جديد'],['pay','السداد']];
+    if(ADMIN&&!current) return [['summary','الملخص'],['partners','الشركاء'],['all','كل العملاء'],['new','عميل جديد'],['pay','السداد']];
     if(ADMIN) return [['summary','الملخص'],['clients','العملاء'],['new','عميل جديد'],['pay','السداد']];
     return [['summary','الملخص'],['clients','العملاء'],['pay','السداد']];
   }
@@ -299,7 +343,7 @@
     const box=$('tabs');const key=list.map(t=>t[0]).join();
     if(box.dataset.k!==key){box.dataset.k=key;box.replaceChildren(...list.map(([k,l])=>{const b=document.createElement('button');b.type='button';b.className='tab';b.setAttribute('role','tab');b.dataset.tab=k;b.textContent=l;b.addEventListener('click',()=>{tab=k;if(k==='new'){$('n-done').hidden=true;if(current)$('n-partner').dataset.pref=current}refresh()});return b}))}
     for(const b of box.children) b.setAttribute('aria-selected',String(b.dataset.tab===tab));
-    $('v-summary').hidden=tab!=='summary';$('v-home').hidden=tab!=='partners';$('v-partner').hidden=tab!=='clients';$('v-pay').hidden=tab!=='pay';$('v-new').hidden=tab!=='new';
+    $('v-summary').hidden=tab!=='summary';$('v-home').hidden=tab!=='partners';$('v-partner').hidden=tab!=='clients';$('v-pay').hidden=tab!=='pay';$('v-new').hidden=tab!=='new';$('v-all').hidden=tab!=='all';
   }
   function refresh(){
     applyTabs();
@@ -307,7 +351,7 @@
     $('sum-title').textContent=current?'كشف حساب '+((partner(current)||{}).name||''):'كشف حساب مهلة';
     $('rate-card').hidden=!ADMIN;$('import-card').hidden=!(ADMIN&&!current&&!S.partners.length);
     if(ADMIN){fillSelect($('apply-scope'),true,scopeRoute!==current?(scopeRoute=current,current||''):null);renderNew();setVal($('rate-input'),S.rate);$('rate-chip').textContent='الحالية '+S.rate+'٪';drawPresets($('presets'),S.rate,setRate,null)}
-    renderPay();calcRate();
+    renderPay();calcRate();if(tab==='all')renderAll();
   }
   function route(){
     let next=null;

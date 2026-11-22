@@ -176,3 +176,11 @@ textarea{font:inherit;font-size:13px;border:1px solid var(--line);border-radius:
 .nsum b{font-size:18px;color:var(--gold)}
 #apply-scope{font:inherit;font-size:14px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);color:var(--fg);max-width:200px}
 @media (max-width:560px){.nform{grid-template-columns:1fr}}
+
+.allbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+#all-q{font:inherit;font-size:15px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--fg);width:min(280px,100%)}
+#all-q:focus{outline:2px solid var(--accent);outline-offset:1px}
+#all-filter button{min-width:auto;font-size:14px;padding:6px 14px}
+#all-rows td.pn a{color:var(--accent);font-weight:600;text-decoration:none}
+#all-rows td.pn a:hover{text-decoration:underline}
+#all-rows td{white-space:nowrap}
